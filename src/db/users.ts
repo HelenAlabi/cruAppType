@@ -13,7 +13,7 @@ const UsersSchema = new mongoose.Schema({
         unique:true,
     },
     role:{
-        type:Number,
+        type:String,
         required:true,
         allowNull:false,
     },

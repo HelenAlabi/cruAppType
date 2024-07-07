@@ -5,71 +5,107 @@ import { UsersModel } from "../db/users";
 class UsersController{
 
 
-
-    getAllUsers = async (request: express.Request, response : express.Response)=>{
+   //GET ALL USERS
+    getAllUsers = async (request: express.Request, response: express.Response) => {
         try {
             const users = await UsersModel.find();
-            return response.status(200).json({data: users});
+            return response.status(200).json({ data: users });
         } catch (error) {
-            return response.sendStatus(400);
+            console.error('Error fetching users:', error);
+            return response.status(500).json({ error: 'Internal Server Error' });
         }
-    }
+    };
 
-    getUser = async (request: express.Request, response : express.Response)=>{
+
+
+       //GET INDIVIDUAL
+
+    getUser = async (request: express.Request, response: express.Response) => {
         try {
-            const {id} = request.params;
+            const { id } = request.params;
+    
+            // Find the user by ID
             const user = await UsersModel.findById(id);
-            return response.status(200).json({data: user});
+            if (!user) {
+                return response.status(404).json({ error: 'Not Found', message: 'User not found' });
+            }
+    
+            return response.status(200).json({ data: user });
         } catch (error) {
-            return response.sendStatus(400);
+            console.error('Error fetching user:', error);
+            return response.status(500).json({ error: 'Internal Server Error' });
         }
-    }
+    };
+          
 
-    createUser = async (request: express.Request, response : express.Response)=>{
+         //CREATING USER
+
+    createUser = async (request: express.Request, response : express.Response) => {
         try {
-            const {name, email, role} = request.body;
-            const user = new UsersModel({
-                name,
-                email,
-                role,
-            });
-            await  user.save();
-            return response.status(200).json({data : user  , message: "User Created Successfully"});
+            const { name, email, role } = request.body;
+            if (!name || !email || !role) {
+                return response.status(400).json({ error: 'Bad Request', message: 'All fields are required' });
+            }
+            const user = new UsersModel({ name, email, role });
+            await user.save();
+            return response.status(200).json({ data: user, message: "User Created Successfully" });
         } catch (error) {
-            return response.sendStatus(400);
+            console.error('Error creating user:', error);
+            return response.status(400).json({ error: 'Bad Request', message: error });
         }
-    }
+    };
 
 
-    updateUser = async (request: express.Request, response : express.Response)=>{
+       //UPDATE USER
+
+    updateUser = async (request: express.Request, response: express.Response) => {
         try {
-            const {id} = request.params;
-            const {name, email, role} = request.body;
-
+            const { id } = request.params;
+            const { name, email, role } = request.body;
+    
+            // VALIDATION
+            if (!name || !email || !role) {
+                return response.status(400).json({ error: 'Bad Request', message: 'All fields are required' });
+            }
+    
+            // FIND BY IT ID
             const user = await UsersModel.findById(id);
-            if(user){
+            if (user) {
                 user.name = name;
                 user.email = email;
                 user.role = role;
-                await  user.save();
-                return response.status(200).json({data : user  , message: "User Updated successfully"});
+
+                await user.save();
+                return response.status(200).json({ data: user, message: "User Updated Successfully" });
             }
-            return response.sendStatus(400);
-        } catch (error) {
-            return response.sendStatus(400);
+    
             
+            return response.status(404).json({ error: 'Not Found', message: 'User not found' });
+        } catch (error) {
+            console.error('Error updating user:', error);
+            return response.status(400).json({ error: 'Bad Request'});
         }
     }
 
-    deleteUser = async (request: express.Request, response : express.Response)=>{
+     deleteUser = async (request: express.Request, response: express.Response) => {
         try {
-            const {id} = request.params;
-             await UsersModel.findByIdAndDelete({_id: id});
-            return response.status(200).json({ message:"User Deleted"});
+            const { id } = request.params;
+    
+            // Find the user by ID
+            const user = await UsersModel.findById(id);
+            if (!user) {
+                return response.status(404).json({ error: 'Not Found', message: 'User not found' });
+            }
+    
+            // Delete the user
+            await UsersModel.findByIdAndDelete(id);
+    
+            return response.status(200).json({ message: "User Deleted Successfully" });
         } catch (error) {
-            return response.sendStatus(400);
+            console.error('Error deleting user:', error);
+            return response.status(500).json({ error: 'Internal Server Error' });
         }
-    }
+    };
 }
 
 export default new UsersController();
